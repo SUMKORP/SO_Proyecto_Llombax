@@ -1,0 +1,37 @@
+project: "Plataforma de música Navidrome en Podman"
+version: "2.0"
+runtime: "Podman rootless (sin Docker Compose ni podman-compose)"
+platform: "AlmaLinux 9 (Linux con SELinux)"
+
+services:
+  media_server:
+    name: "Navidrome"
+    image: "docker.io/navidrome/navidrome:latest"
+    internal_port: 4533
+    public_port_env: "APP_PORT"
+    database: "SQLite incorporada, guardada en state/navidrome/"
+    libraries:
+      music: "data/musica/ -> /music/musica:ro,Z"
+      podcast: "data/podcast/ -> /music/podcast:ro,Z"
+  database_auxiliary:
+    name: "MariaDB (laboratorio independiente de Navidrome)"
+    image: "docker.io/library/mariadb:10.11"
+    internal_port: 3306
+    published_to_host: false
+    named_volume: "so-mariadb-data"
+    credentials: "Variables en .env, nunca incluir contraseñas reales en Git"
+
+network:
+  name: "so-proyecto-net"
+  purpose: "Red privada Podman para contenedores"
+
+remote_access:
+  tunnel: "ngrok (opcional)"
+  command: "./scripts/web.sh"
+
+commands:
+  start: "./scripts/start.sh"
+  stop: "./scripts/stop.sh"
+  reset: "./scripts/reset.sh"
+  status: "./scripts/status.sh"
+  backup: "./scripts/backup.sh"
